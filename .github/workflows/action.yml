@@ -1,0 +1,26 @@
+on:
+  push
+
+name: Render projekt.rmd
+
+jobs:
+  render:
+    name: Render projekt.rmd
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: r-lib/actions/setup-r@v1
+      - uses: r-lib/actions/setup-pandoc@v1
+      - name: Install pdfLaTeX
+        run: bash -c 'sudo apt-get install texlive-latex-base texlive-fonts-recommended texlive-fonts-extra texlive-latex-extra'
+      - name: Install rmarkdown
+        run: Rscript -e 'install.packages("rmarkdown")'
+      - name: Install pander
+        run: Rscript -e 'install.packages("pander")'
+      - name: Render projekt.rmd
+        run: Rscript -e 'rmarkdown::render("projekt.rmd")'
+      - name: Upload projekt.pdf
+        uses: actions/upload-artifact@v1
+        with:
+          name: projekt.pdf
+          path: projekt.pdf
