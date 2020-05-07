@@ -99,4 +99,53 @@ plot(fh_concat$Tlak, fh_concat$Vreliste, pch=16, xlab = "Tlak", ylab = "Vreliste
 ggplot(fh_concat, aes(x = Tlak, y = Vreliste)) +
   geom_point() +
   stat_smooth(method = "lm", formula = y ~ x + I(x^2), size = 1, se = FALSE)
+
+# REZIDUALI
+fh_concat$predictedLinear = predict(linear_model)
+fh_concat$residualsLinear = residuals(linear_model)
+fh_concat$stdResidualsLinear = rstandard(linear_model)
+fh_concat$predictedQuadratic = predict(quadratic_model)
+fh_concat$residualsQuadratic = residuals(quadratic_model)
+fh_concat$stdResidualsQuadratic = rstandard(quadratic_model)
+
+# Linear residuals
+ggplot(fh_concat, aes(x = Tlak, y = Vreliste)) +
+  geom_smooth(method = "lm", se = FALSE, color = "lightgrey") +     # regression line  
+  geom_segment(aes(xend = Tlak, yend = predictedLinear), alpha = .2) +      # draw line from point to line
+  geom_point(aes(color = abs(residualsLinear), size = abs(residualsLinear))) +  # size of the points
+  scale_color_continuous(low = "green", high = "red") +             # colour of the points mapped to residual size - green smaller, red larger
+  guides(color = FALSE, size = FALSE) +                             # Size legend removed
+  geom_point(aes(y = predictedLinear), shape = 1) +
+  theme_bw()
+
+# Std linear residuals
+ggplot(fh_concat, aes(x = Tlak, y = Vreliste)) +
+  geom_smooth(method = "lm", se = FALSE, color = "lightgrey") +     # regression line  
+  geom_segment(aes(xend = Tlak, yend = predictedLinear), alpha = .2) +      # draw line from point to line
+  geom_point(aes(color = abs(stdResidualsLinear), size = abs(stdResidualsLinear))) +  # size of the points
+  scale_color_continuous(low = "green", high = "red") +             # colour of the points mapped to residual size - green smaller, red larger
+  guides(color = FALSE, size = FALSE) +                             # Size legend removed
+  geom_point(aes(y = predictedLinear), shape = 1) +
+  theme_bw()
+
+# Quadratic residuals
+ggplot(fh_concat, aes(x = Tlak, y = Vreliste)) +
+  geom_smooth(method = "lm", se = FALSE, color = "lightgrey") +     # regression line  
+  geom_segment(aes(xend = Tlak, yend = predictedQuadratic), alpha = .2) +      # draw line from point to line
+  geom_point(aes(color = abs(residualsQuadratic), size = abs(residualsQuadratic))) +  # size of the points
+  scale_color_continuous(low = "green", high = "red") +             # colour of the points mapped to residual size - green smaller, red larger
+  guides(color = FALSE, size = FALSE) +                             # Size legend removed
+  geom_point(aes(y = predictedQuadratic), shape = 1) +
+  theme_bw()
+
+# Std linear residuals
+ggplot(fh_concat, aes(x = Tlak, y = Vreliste)) +
+  geom_smooth(method = "lm", se = FALSE, color = "lightgrey") +     # regression line  
+  geom_segment(aes(xend = Tlak, yend = predictedQuadratic), alpha = .2) +      # draw line from point to line
+  geom_point(aes(color = abs(stdResidualsQuadratic), size = abs(stdResidualsQuadratic))) +  # size of the points
+  scale_color_continuous(low = "green", high = "red") +             # colour of the points mapped to residual size - green smaller, red larger
+  guides(color = FALSE, size = FALSE) +                             # Size legend removed
+  geom_point(aes(y = predictedQuadratic), shape = 1) +
+  theme_bw()
+
 ```
