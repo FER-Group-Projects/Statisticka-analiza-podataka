@@ -26,14 +26,38 @@ barplot(dice$V3, names.arg = dice$V1)
 # p' = x / n, odnosno broj povoljnih ishoda kroz broj svih ishoda
 # u ovom slucaju broj 5/6 kroz ukupan broj ishoda
 
-estimate_p <- function(values, categories)
-  sum(categories * values) / (max(categories) * sum(values))
+desirable.outcomes <- function(values, categories)
+  sum(categories * values)
 
-p.0 = estimate_p(dice$V2, dice$V1)
-p.1 = estimate_p(dice$V3, dice$V1)
+all.outcomes <- function(values, categories)
+  max(categories) * sum(values)
 
-print(p.0)
-print(p.1)
+estimate.p <- function(values, categories)
+  desirable.outcomes(values, categories) / all.outcomes(values, categories)
+
+p.0 = estimate.p(dice$V2, dice$V1)
+p.1 = estimate.p(dice$V3, dice$V1)
+
+sprintf(fmt = 'Procjena parametra p za I. uzorak: %.4f',  p.0)
+sprintf(fmt = 'Procjena parametra p za II. uzorak: %.4f', p.1)
+
+confidence.interval <- function(values, categories, interval) {
+  alpha.half <- (1 - interval) / 2
+  
+  x <- desirable.outcomes(values, categories)
+  n <- all.outcomes(values, categories)
+  
+  c(qbeta(alpha.half, x, n - x + 1), qbeta(1 - alpha.half, x + 1, n - x))
+}
+
+interval = 0.95
+
+cp.0 = confidence.interval(dice$V2, dice$V1, interval)
+cp.1 = confidence.interval(dice$V3, dice$V1, interval)
+
+sprintf(fmt = '%d%% postotni interval pouzdanosti za I. uzorak: [%.4f, %.4f]',  interval * 100, cp.0[1], cp.0[2])
+sprintf(fmt = '%d%% postotni interval pouzdanosti za II. uzorak: [%.4f, %.4f]', interval * 100, cp.1[1], cp.1[2])
+
 ```
 
 ```{r}
