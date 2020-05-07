@@ -61,9 +61,42 @@ sprintf(fmt = '%d%% postotni interval pouzdanosti za II. uzorak: [%.4f, %.4f]', 
 ```
 
 ```{r}
+library(ggplot2)
 forbes <- read.table("forbes.dat", quote="\"", comment.char="")
 hooker <- read.table("hooker.dat", quote="\"", comment.char="")
+fh_concat <- rbind(forbes, hooker)
 
-plot(forbes$V1, forbes$V2)
-plot(hooker$V1, hooker$V2)
+names(fh_concat)[names(fh_concat) == "V1"] <- "Vreliste"
+names(fh_concat)[names(fh_concat) == "V2"] <- "Tlak"
+
+plot(fh_concat$Vreliste, fh_concat$Tlak)
+
+# LINEARNI MODEL
+
+linear_model <- lm(Vreliste ~ Tlak, data = fh_concat)
+linear_model
+
+plot(fh_concat$Tlak, fh_concat$Vreliste, pch=16, xlab = "Tlak", ylab = "Vreliste", cex.lab = 1.3, col = "red" ) + abline(linear_model, col = "blue")
+
+# Ili ggplot:
+
+ggplot(fh_concat, aes(Tlak, Vreliste)) +
+  geom_point() +
+  stat_smooth(method = lm, size = 1, se = FALSE)
+
+# KVADRATICNI MODEL
+
+Tlak2 <- fh_concat$Tlak^2
+quadratic_model <-lm(Vreliste ~ Tlak + Tlak2, data = fh_concat)
+quadratic_model
+
+timevalues <- seq(0, 30, 0.1)
+predictedcounts <- predict(quadratic_model,list(Tlak=timevalues, Tlak2=timevalues^2))
+
+plot(fh_concat$Tlak, fh_concat$Vreliste, pch=16, xlab = "Tlak", ylab = "Vreliste", cex.lab = 1.3, col = "blue") + lines(timevalues, predictedcounts, col = "darkgreen", lwd = 3)
+
+# Ili ggplot:
+ggplot(fh_concat, aes(x = Tlak, y = Vreliste)) +
+  geom_point() +
+  stat_smooth(method = "lm", formula = y ~ x + I(x^2), size = 1, se = FALSE)
 ```
