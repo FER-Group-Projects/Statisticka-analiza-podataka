@@ -11,6 +11,10 @@ library(knitr)
 opts_chunk$set(tidy.opts=list(width.cutoff=60),tidy=TRUE)
 ```
 
+# Zadatak A
+
+## Histogrami podataka
+
 ```{r}
 dice <- read.delim("dice.dat", header=FALSE)
 
@@ -22,9 +26,13 @@ dice <- read.delim("dice.dat", header=FALSE)
 barplot(dice$V2, names.arg = dice$V1)
 barplot(dice$V3, names.arg = dice$V1)
 
-# Procjena p parametra binomne distribucije koristeći maksimalnu izglednost
-# p' = x / n, odnosno broj povoljnih ishoda kroz broj svih ishoda
-# u ovom slucaju broj 5/6 kroz ukupan broj ishoda
+```
+
+## Testiranje distribucije podataka, procjena parametra p
+
+Parametar p binomne razdiobe možemo procjeniti koristeći procjenu najveće izglednosti. Kod binomne distribucije parametar p možemo procjeniti kao omjer povoljnih ishoda i svih ishoda.
+
+```{r}
 
 desirable.outcomes <- function(values, categories)
   sum(categories * values)
@@ -37,9 +45,37 @@ estimate.p <- function(values, categories)
 
 p.0 = estimate.p(dice$V2, dice$V1)
 p.1 = estimate.p(dice$V3, dice$V1)
+```
 
-sprintf(fmt = 'Procjena parametra p za I. uzorak: %.4f',  p.0)
-sprintf(fmt = 'Procjena parametra p za II. uzorak: %.4f', p.1)
+Procjena parametra p za prvi uzorak jest `r sprintf('%.4f', p.0)`, dok je za drugi uzorak `r sprintf('%.4f', p.1)`.
+
+## Usporedba histograma podataka s binomnim razdiobama
+
+```{r}
+barplot(dbinom(0:12, 12, 1 / 3), names.arg = 0:12, 
+        main = "Binomna razdioba - B(12, 1 / 3)")
+barplot(dbinom(0:12, 12, p.0), names.arg = 0:12, 
+        main = sprintf(fmt = 'Binomna razdioba - B(12, %.4f)', p.0))
+barplot(dbinom(0:12, 12, p.1), names.arg = 0:12, 
+        main = sprintf(fmt = 'Binomna razdioba - B(12, %.4f)', p.1))
+```
+
+### Razlike
+
+Binomne vjerojatnosti su pomnožene s ukupnim brojem ishoda te su od toga oduzete vrijednosti uzorka.
+
+```{r}
+barplot(sum(dice$V2) * dbinom(0:12, 12, p.0) - dice$V2, names.arg = 0:12, 
+        main = sprintf(fmt = 'Razlika prvog uzorka i B(12, %.4f)', p.0))
+barplot(sum(dice$V3) * dbinom(0:12, 12, p.1) - dice$V3, names.arg = 0:12, 
+        main = sprintf(fmt = 'Razlika drugog uzorka i B(12, %.4f)', p.1))
+```
+
+## Određivanje intervala pouzdanosti za parametar p
+
+Koristeći Clopper-Pearson intervalnu procjenu možemo procjeniti interval pouzdanosti parametra p. 
+
+```{r}
 
 confidence.interval <- function(values, categories, interval) {
   alpha.half <- (1 - interval) / 2
@@ -55,10 +91,11 @@ interval = 0.95
 cp.0 = confidence.interval(dice$V2, dice$V1, interval)
 cp.1 = confidence.interval(dice$V3, dice$V1, interval)
 
-sprintf(fmt = '%d%% postotni interval pouzdanosti za I. uzorak: [%.4f, %.4f]',  interval * 100, cp.0[1], cp.0[2])
-sprintf(fmt = '%d%% postotni interval pouzdanosti za II. uzorak: [%.4f, %.4f]', interval * 100, cp.1[1], cp.1[2])
-
 ```
+
+`r interval * 100`% interval pouzdanosti za prvi uzorak jest: [`r sprintf('%.4f, %.4f', cp.0[1], cp.0[2])`], dok je za drugi uzorak: [`r sprintf('%.4f, %.4f', cp.1[1], cp.1[2])`].
+
+# Zadatak B
 
 ```{r}
 forbes <- read.table("forbes.dat", quote="\"", comment.char="")
