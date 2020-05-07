@@ -24,7 +24,7 @@ barplot(dice$V3, names.arg = dice$V1)
 
 # Procjena p parametra binomne distribucije koristeći maksimalnu izglednost
 # p' = x / n, odnosno broj povoljnih ishoda kroz broj svih ishoda
-# u ovom slucaju broj 5/6 kroz sve
+# u ovom slucaju broj 5/6 kroz ukupan broj ishoda
 
 estimate_p <- function(values, categories)
   sum(categories * values) / (max(categories) * sum(values))
