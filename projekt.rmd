@@ -3,11 +3,15 @@ title: "Izvješće"
 subtitle: "Prilagodba modela podatcima i linearna regresija"
 author: "Matija Bačić, Marko Lazarić, Roman Yatsukha"
 date: "12.05.2019."
-output: pdf_document
+output: 
+  pdf_document:
+    includes:
+      in_header: header.tex
 ---
   
 ```{r, echo = FALSE}
 library(knitr)
+library(pander)
 opts_chunk$set(tidy.opts=list(width.cutoff=60),tidy=TRUE)
 ```
 
@@ -17,12 +21,7 @@ opts_chunk$set(tidy.opts=list(width.cutoff=60),tidy=TRUE)
 
 ```{r}
 dice <- read.delim("dice.dat", header=FALSE)
-
-# 3.
-# Granice postavljamo sami tako da se pomaknemo za 0.5 na lijevo od najmanjeg podatka
-# iz uzorka i za 0.5 na desno od najveceg podatka iz uzorka te zatim podijelimo taj
-# interval na 10 ekvidistantnih intervala (pomocu 11 tocaka)
-
+      
 barplot(dice$V2, names.arg = dice$V1)
 barplot(dice$V3, names.arg = dice$V1)
 
@@ -47,8 +46,16 @@ p.0 = estimate.p(dice$V2, dice$V1)
 p.1 = estimate.p(dice$V3, dice$V1)
 
 goodness_of_fit_binomial_test <- function(frequencies, n, p) {
+  print_table <- function(observed, expected, caption = 'TODO fix') {
+    panderOptions('table.split.table', Inf)
+    
+    table.frame = data.frame(t(cbind(observed, expected)), row.names = c('$o_i$', '$e_i$'))
+    colnames(table.frame) <- c(as.character(0:(length(observed) - 1)))
+    pandoc.table(table.frame, style = 'rmarkdown')
+  }
+  
   observed = frequencies
-  expected = sapply(c(0:n), function(k) sum(frequencies) * choose(n, k) * p^k * (1 - p)^(n - k))
+  expected = sum(observed) * dbinom(0:n, n, p)
   
   pruned.observed = c()
   pruned.expected = c()
@@ -56,6 +63,8 @@ goodness_of_fit_binomial_test <- function(frequencies, n, p) {
   current.sum.expected = 0
   current.index = 1
   
+  print_table(observed, expected)
+      
   for (i in 1:length(observed)) { 
     if (current.sum.expected + expected[i] > 5) {
       pruned.expected[current.index] <- current.sum.expected + expected[i]
@@ -77,18 +86,46 @@ goodness_of_fit_binomial_test <- function(frequencies, n, p) {
     pruned.observed[current.index - 1] <- pruned.observed[current.index - 1] + current.sum.observed
   }
   
-  X2 = sum((pruned.observed - pruned.expected)^2 / pruned.expected)
+  print_table(pruned.observed, pruned.expected)
   
-  return(pchisq(X2, df=length(pruned.observed) - 1, lower.tail = FALSE))
+  X2 = sum((pruned.observed - pruned.expected)^2 / pruned.expected)
+  p = pchisq(X2, df=length(pruned.observed) - 1, lower.tail = FALSE)
+  
+  pandoc.p(sprintf(fmt = "$$ x = \\sum\\limits^k_{i=0} \\frac{(o_i - e_i)^2}{e_i} = %.4f $$", X2))
+  pandoc.p(sprintf(fmt = "$$ p = P(X \\ge x) = %.4f $$", p))
 }
-
-sprintf(fmt = 'p-vrijednost za 1. skup podataka i B(0, 1/3) je %.4f.', goodness_of_fit_binomial_test(dice$V2, 12, 1/3))
-sprintf(fmt = 'p-vrijednost za 1. skup podataka i B(0, %.4f) je %.4f.', p.0, goodness_of_fit_binomial_test(dice$V2, 12, p.0))
-sprintf(fmt = 'p-vrijednost za 1. skup podataka i B(0, 1/3) je %.4f.', goodness_of_fit_binomial_test(dice$V3, 12, 1/3))
-sprintf(fmt = 'p-vrijednost za 1. skup podataka i B(0, %.4f) je %.4f.', p.1, goodness_of_fit_binomial_test(dice$V3, 12, p.1))
 ```
 
 Procjena parametra p za prvi uzorak jest `r sprintf('%.4f', p.0)`, dok je za drugi uzorak `r sprintf('%.4f', p.1)`.
+\pagebreak
+
+### Testiranje prvog uzorka s distribucijom $B(12, 1/3)$
+
+```{r results='asis'}
+goodness_of_fit_binomial_test(dice$V2, 12, 1/3)
+```
+\pagebreak
+
+### Testiranje prvog uzorka s distribucijom $B(12, `r sprintf('%.4f', p.0)`)$
+
+```{r results='asis'}
+goodness_of_fit_binomial_test(dice$V2, 12, p.0)
+```
+\pagebreak
+
+### Testiranje drugog uzorka s distribucijom $B(12, 1/3)$
+
+```{r results='asis'}
+goodness_of_fit_binomial_test(dice$V3, 12, 1/3)
+```
+\pagebreak
+
+### Testiranje drugog uzorka s distribucijom $B(12, `r sprintf('%.4f', p.1)`)$
+
+```{r results='asis'}
+goodness_of_fit_binomial_test(dice$V3, 12, p.1)
+```
+\pagebreak
 
 ## Usporedba histograma podataka s binomnim razdiobama
 
