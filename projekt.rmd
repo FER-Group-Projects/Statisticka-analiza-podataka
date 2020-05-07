@@ -148,4 +148,16 @@ ggplot(fh_concat, aes(x = Tlak, y = Vreliste)) +
   geom_point(aes(y = predictedQuadratic), shape = 1) +
   theme_bw()
 
+# Checking normality lin residuals (normal prob plot)
+qqnorm(fh_concat$stdResidualsLinear, xlab="Standardizirani reziduali", ylab="Z-vrijednost", main="Reziduali linearne regresije (normalni vjerojatnosni graf)")
+
+# Checking normality quad residuals (normal prob plot)
+qqnorm(fh_concat$stdResidualsQuadratic, xlab="Standardizirani reziduali", ylab="Z-vrijednost", main="Reziduali kvadratne regresije (normalni vjerojatnosni graf)")
+
+# Checking normality lin residuals (Kolmogorov-Smirnov test)
+ks.test(fh_concat$stdResidualsLinear, "pnorm", mean=mean(fh_concat$stdResidualsLinear), sd=sd(fh_concat$stdResidualsLinear))
+
+# Checking normality quad residuals (Kolmogorov-Smirnov test)
+ks.test(fh_concat$stdResidualsQuadratic, "pnorm", mean=mean(fh_concat$stdResidualsQuadratic), sd=sd(fh_concat$stdResidualsQuadratic))
+
 ```
