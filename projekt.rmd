@@ -21,6 +21,19 @@ dice <- read.delim("dice.dat", header=FALSE)
 
 barplot(dice$V2, names.arg = dice$V1)
 barplot(dice$V3, names.arg = dice$V1)
+
+# Procjena p parametra binomne distribucije koristeći maksimalnu izglednost
+# p' = x / n, odnosno broj povoljnih ishoda kroz broj svih ishoda
+# u ovom slucaju broj 5/6 kroz sve
+
+estimate_p <- function(values, categories)
+  sum(categories * values) / (max(categories) * sum(values))
+
+p.0 = estimate_p(dice$V2, dice$V1)
+p.1 = estimate_p(dice$V3, dice$V1)
+
+print(p.0)
+print(p.1)
 ```
 
 ```{r}
