@@ -15,6 +15,8 @@ jobs:
         run: bash -c 'sudo apt-get install texlive-latex-base texlive-fonts-recommended texlive-fonts-extra texlive-latex-extra'
       - name: Install rmarkdown
         run: Rscript -e 'install.packages("rmarkdown")'
+      - name: Install ggplot2
+        run: Rscript -e 'install.packages("ggplot2")'
       - name: Install pander
         run: Rscript -e 'install.packages("pander")'
       - name: Render projekt.rmd
