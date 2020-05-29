@@ -269,5 +269,6 @@ anova(linear_model, quadratic_model)
 # 95% confidence interval for parameters of quadratic model
 summary(quadratic_model)
 confint(quadratic_model, 'Tlak', level=0.95)
+confint(quadratic_model, 'Tlak2', level=0.95)
 
 ```
