@@ -288,52 +288,29 @@ fh_concat$stdResidualsLinear = rstandard(linear_model)
 fh_concat$predictedQuadratic = predict(quadratic_model)
 fh_concat$residualsQuadratic = residuals(quadratic_model)
 fh_concat$stdResidualsQuadratic = rstandard(quadratic_model)
+x.axis = seq(from = 0, to = nrow(fh_concat) - 1, by = 1)
 
 # Linear residuals
-ggplot(fh_concat, aes(x = Tlak, y = Vreliste)) +
-  geom_smooth(method = "lm", se = FALSE, color = "lightgrey") +     # regression line  
-  geom_segment(aes(xend = Tlak, yend = predictedLinear), alpha = .2) +      # draw line from point to line
-  geom_point(aes(color = abs(residualsLinear), size = abs(residualsLinear))) +  # size of the points
-  scale_color_continuous(low = "green", high = "red") +             # colour of the points mapped to residual size - green smaller, red larger
-  guides(color = FALSE, size = FALSE) +                             # Size legend removed
-  geom_point(aes(y = predictedLinear), shape = 1) +
-  theme_bw()
+ggplot(data=fh_concat, mapping=aes(x = x.axis, y = residualsLinear)) + 
+  geom_point()
 
 # Std linear residuals
-ggplot(fh_concat, aes(x = Tlak, y = Vreliste)) +
-  geom_smooth(method = "lm", se = FALSE, color = "lightgrey") +     # regression line  
-  geom_segment(aes(xend = Tlak, yend = predictedLinear), alpha = .2) +      # draw line from point to line
-  geom_point(aes(color = abs(stdResidualsLinear), size = abs(stdResidualsLinear))) +  # size of the points
-  scale_color_continuous(low = "green", high = "red") +             # colour of the points mapped to residual size - green smaller, red larger
-  guides(color = FALSE, size = FALSE) +                             # Size legend removed
-  geom_point(aes(y = predictedLinear), shape = 1) +
-  theme_bw()
+ggplot(data=fh_concat, mapping=aes(x = x.axis, y = stdResidualsLinear)) + 
+  geom_point()
 
 # Quadratic residuals
-ggplot(fh_concat, aes(x = Tlak, y = Vreliste)) +
-  geom_smooth(method = "lm", se = FALSE, color = "lightgrey") +     # regression line  
-  geom_segment(aes(xend = Tlak, yend = predictedQuadratic), alpha = .2) +      # draw line from point to line
-  geom_point(aes(color = abs(residualsQuadratic), size = abs(residualsQuadratic))) +  # size of the points
-  scale_color_continuous(low = "green", high = "red") +             # colour of the points mapped to residual size - green smaller, red larger
-  guides(color = FALSE, size = FALSE) +                             # Size legend removed
-  geom_point(aes(y = predictedQuadratic), shape = 1) +
-  theme_bw()
+ggplot(data=fh_concat, mapping=aes(x = x.axis, y = residualsQuadratic)) + 
+  geom_point()
 
-# Std linear residuals
-ggplot(fh_concat, aes(x = Tlak, y = Vreliste)) +
-  geom_smooth(method = "lm", se = FALSE, color = "lightgrey") +     # regression line  
-  geom_segment(aes(xend = Tlak, yend = predictedQuadratic), alpha = .2) +      # draw line from point to line
-  geom_point(aes(color = abs(stdResidualsQuadratic), size = abs(stdResidualsQuadratic))) +  # size of the points
-  scale_color_continuous(low = "green", high = "red") +             # colour of the points mapped to residual size - green smaller, red larger
-  guides(color = FALSE, size = FALSE) +                             # Size legend removed
-  geom_point(aes(y = predictedQuadratic), shape = 1) +
-  theme_bw()
+# Std quadratic residuals
+ggplot(data=fh_concat, mapping=aes(x = x.axis, y = stdResidualsQuadratic)) + 
+  geom_point()
 
 # Checking normality lin residuals (normal prob plot)
-qqnorm(fh_concat$stdResidualsLinear, xlab="Standardizirani reziduali", ylab="Z-vrijednost", main="Reziduali linearne regresije (normalni vjerojatnosni graf)")
+qqnorm(fh_concat$stdResidualsLinear, xlab="Standardizirani reziduali", ylab="Z-vrijednost", main="Reziduali linearne regresije (normalni vjerojatnosni graf)"); qqline(fh_concat$stdResidualsLinear)
 
 # Checking normality quad residuals (normal prob plot)
-qqnorm(fh_concat$stdResidualsQuadratic, xlab="Standardizirani reziduali", ylab="Z-vrijednost", main="Reziduali kvadratne regresije (normalni vjerojatnosni graf)")
+qqnorm(fh_concat$stdResidualsQuadratic, xlab="Standardizirani reziduali", ylab="Z-vrijednost", main="Reziduali kvadratne regresije (normalni vjerojatnosni graf)"); qqline(fh_concat$stdResidualsQuadratic)
 
 # Checking normality lin residuals (Kolmogorov-Smirnov test)
 ks.test(fh_concat$stdResidualsLinear, "pnorm", mean=mean(fh_concat$stdResidualsLinear), sd=sd(fh_concat$stdResidualsLinear))
