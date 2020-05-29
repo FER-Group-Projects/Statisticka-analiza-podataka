@@ -272,4 +272,18 @@ confint(quadratic_model, 'Tlak', level=0.95)
 confint(quadratic_model, 'Tlak2', level=0.95)
 confint(quadratic_model, '(Intercept)', level=0.95)
 
+confident <- data.frame(Tlak = fh_concat$Tlak, Vreliste = predict(quadratic_model, fh_concat, interval = 'confidence'))
+
+ggplot(fh_concat, aes(x = Tlak, y = Vreliste)) +
+  geom_point() +
+  geom_smooth(data = confident, aes(x = Tlak, y = Vreliste.lwr), color = 'red') + 
+  geom_smooth(data = confident, aes(x = Tlak, y = Vreliste.upr), color = 'blue')
+
+predicted <- data.frame(Tlak = fh_concat$Tlak, Vreliste = predict(quadratic_model, fh_concat, interval = 'prediction'))
+
+ggplot(fh_concat, aes(x = Tlak, y = Vreliste)) +
+  geom_point() +
+  geom_smooth(data = predicted, aes(x = Tlak, y = Vreliste.lwr), color = 'red') + 
+  geom_smooth(data = predicted, aes(x = Tlak, y = Vreliste.upr), color = 'blue')
+
 ```
