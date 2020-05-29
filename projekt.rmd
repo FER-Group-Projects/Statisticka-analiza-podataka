@@ -279,17 +279,20 @@ plot(fh_concat$Vreliste, fh_concat$Tlak)
 
 Prikazom podataka, vidimo da graf sugerira linearnu vezu među podacima.
 
+## Linearni model:
+.
+
 ```{r}
 linear_model <- lm(Vreliste ~ Tlak, data = fh_concat)
 linear_model
-```
-## Linearni model:
-```{r}
 ggplot(fh_concat, aes(Tlak, Vreliste)) +
   geom_point() +
   stat_smooth(method = lm, size = 1, se = FALSE)
 ```
+
 ## Kvadratični model:
+.
+
 ```{r}
 Tlak2 <- fh_concat$Tlak^2
 quadratic_model <-lm(Vreliste ~ Tlak + Tlak2, data = fh_concat)
@@ -299,7 +302,10 @@ ggplot(fh_concat, aes(x = Tlak, y = Vreliste)) +
   geom_point() +
   stat_smooth(method = "lm", formula = y ~ x + I(x^2), size = 1, se = FALSE)
 ```
+
 ## Reziduali pojedinih modela:
+.
+
 ```{r}
 fh_concat$predictedLinear = predict(linear_model)
 fh_concat$residualsLinear = residuals(linear_model)
@@ -309,39 +315,63 @@ fh_concat$residualsQuadratic = residuals(quadratic_model)
 fh_concat$stdResidualsQuadratic = rstandard(quadratic_model)
 x.axis = seq(from = 0, to = nrow(fh_concat) - 1, by = 1)
 ```
+
 ## Prikaz reziduala linearnog modela
+.
+
 ```{r}
 ggplot(data=fh_concat, mapping=aes(x = x.axis, y = residualsLinear)) + 
   geom_point()
 ```
+
 ## Prikaz standardnih reziduala linearnog modela
+.
+
 ```{r}
 ggplot(data=fh_concat, mapping=aes(x = x.axis, y = stdResidualsLinear)) + 
   geom_point()
 ```
+
 ## Prikaz reziduala kvadratičnog modela
+.
+
 ```{r}
 ggplot(data=fh_concat, mapping=aes(x = x.axis, y = residualsQuadratic)) + 
   geom_point()
 ```
+
 ## Prikaz standardnih reziduala kvadratičnog modela
+.
+
 ```{r}
 ggplot(data=fh_concat, mapping=aes(x = x.axis, y = stdResidualsQuadratic)) + 
   geom_point()
 ```
+
 ## Provjera normalnosti reziduala linearnog modela (normalni vjerojatnosni graf)
+.
+
 ```{r}
 qqnorm(fh_concat$stdResidualsLinear, xlab="Standardizirani reziduali", ylab="Z-vrijednost", main="Reziduali linearne regresije (normalni vjerojatnosni graf)"); qqline(fh_concat$stdResidualsLinear)
 ```
+
 ## Provjera normalnosti reziduala kvadratičnog modela (normalni vjerojatnosni graf)
+.
+
 ```{r}
 qqnorm(fh_concat$stdResidualsQuadratic, xlab="Standardizirani reziduali", ylab="Z-vrijednost", main="Reziduali kvadratne regresije (normalni vjerojatnosni graf)"); qqline(fh_concat$stdResidualsQuadratic)
 ```
+
 ## Provjera normalnosti reziduala linearnog modela (Kolmogorov-Smirnovljev test)
+.
+
 ```{r}
 ks.test(fh_concat$stdResidualsLinear, "pnorm", mean=mean(fh_concat$stdResidualsLinear), sd=sd(fh_concat$stdResidualsLinear))
 ```
+
 ## Provjera normalnosti reziduala kvadratičnog modela (Kolmogorov-Smirnovljev test)
+.
+
 ```{r}
 ks.test(fh_concat$stdResidualsQuadratic, "pnorm", mean=mean(fh_concat$stdResidualsQuadratic), sd=sd(fh_concat$stdResidualsQuadratic))
 ```
@@ -356,12 +386,17 @@ U ovom koraku, zaključili bismo da kvadratični model bolje opisuje zadani uzor
 
 ## Anova test prihvatljivosti modela
 
+$$H_0: \text{linearni model je dostatan}$$
+$$H_1: \text{linearni model nije dostatan}$$
+
+
 ```{r}
 anova(linear_model, quadratic_model)
 ```
 U ovom koraku, dobivamo više informacija. Uz nivo značajnosti 0.05 i uzimajući u obzir p < 2.2e-16, možemo zaključiti da dobivamo statistički značajan napredak koristeći kvadratični u odnosnu na linearni model.
 
 ## 95% interval povjerenja za paramtere kvadratičnog modela:
+.
 
 ```{r}
 summary(quadratic_model)
@@ -369,7 +404,10 @@ confint(quadratic_model, 'Tlak', level=0.95)
 confint(quadratic_model, 'Tlak2', level=0.95)
 confint(quadratic_model, '(Intercept)', level=0.95)
 ```
+
 ## Granice 95% intervala pouzdanosti za srednju vrijednost od Y (uz dano x)
+.
+
 ```{r}
 confident <- data.frame(Tlak = fh_concat$Tlak, Vreliste = predict(quadratic_model, fh_concat, interval = 'confidence', level = 0.95))
 
@@ -378,7 +416,10 @@ ggplot(fh_concat, aes(x = Tlak, y = Vreliste)) +
   geom_smooth(data = confident, aes(x = Tlak, y = Vreliste.lwr), color = 'red') + 
   geom_smooth(data = confident, aes(x = Tlak, y = Vreliste.upr), color = 'blue')
 ```
+
 ## Granice 95% intervala pouzdanosti za Y (uz dano x)
+.
+
 ```{r}
 predicted <- data.frame(Tlak = fh_concat$Tlak, Vreliste = predict(quadratic_model, fh_concat, interval = 'prediction', level = 0.95))
 
