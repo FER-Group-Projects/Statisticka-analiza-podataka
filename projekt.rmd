@@ -275,36 +275,28 @@ names(fh_concat)[names(fh_concat) == "V2"] <- "Tlak"
 
 plot(fh_concat$Vreliste, fh_concat$Tlak)
 
-# LINEARNI MODEL
+# Prikazom podataka, vidimo da graf sugerira linearnu vezu među podacima.
 
 linear_model <- lm(Vreliste ~ Tlak, data = fh_concat)
 linear_model
 
-plot(fh_concat$Tlak, fh_concat$Vreliste, pch=16, xlab = "Tlak", ylab = "Vreliste", cex.lab = 1.3, col = "red" ) + abline(linear_model, col = "blue")
-
-# Ili ggplot:
+# Linearni model:
 
 ggplot(fh_concat, aes(Tlak, Vreliste)) +
   geom_point() +
   stat_smooth(method = lm, size = 1, se = FALSE)
 
-# KVADRATICNI MODEL
-
 Tlak2 <- fh_concat$Tlak^2
 quadratic_model <-lm(Vreliste ~ Tlak + Tlak2, data = fh_concat)
 quadratic_model
 
-timevalues <- seq(0, 30, 0.1)
-predictedcounts <- predict(quadratic_model,list(Tlak=timevalues, Tlak2=timevalues^2))
+# Kvadratični model:
 
-plot(fh_concat$Tlak, fh_concat$Vreliste, pch=16, xlab = "Tlak", ylab = "Vreliste", cex.lab = 1.3, col = "blue") + lines(timevalues, predictedcounts, col = "darkgreen", lwd = 3)
-
-# Ili ggplot:
 ggplot(fh_concat, aes(x = Tlak, y = Vreliste)) +
   geom_point() +
   stat_smooth(method = "lm", formula = y ~ x + I(x^2), size = 1, se = FALSE)
 
-# REZIDUALI
+# Reziduali pojedinih modela:
 fh_concat$predictedLinear = predict(linear_model)
 fh_concat$residualsLinear = residuals(linear_model)
 fh_concat$stdResidualsLinear = rstandard(linear_model)
@@ -313,36 +305,67 @@ fh_concat$residualsQuadratic = residuals(quadratic_model)
 fh_concat$stdResidualsQuadratic = rstandard(quadratic_model)
 x.axis = seq(from = 0, to = nrow(fh_concat) - 1, by = 1)
 
-# Linear residuals
+# Prikaz reziduala linearnog modela
 ggplot(data=fh_concat, mapping=aes(x = x.axis, y = residualsLinear)) + 
   geom_point()
 
-# Std linear residuals
+# Prikaz standardnih reziduala linearnog modela
 ggplot(data=fh_concat, mapping=aes(x = x.axis, y = stdResidualsLinear)) + 
   geom_point()
 
-# Quadratic residuals
+# Prikaz reziduala kvadratičnog modela
 ggplot(data=fh_concat, mapping=aes(x = x.axis, y = residualsQuadratic)) + 
   geom_point()
 
-# Std quadratic residuals
+# Prikaz standardnih reziduala kvadratičnog modela
 ggplot(data=fh_concat, mapping=aes(x = x.axis, y = stdResidualsQuadratic)) + 
   geom_point()
 
-# Checking normality lin residuals (normal prob plot)
+# Provjera normalnosti reziduala linearnog modela (normalni vjerojatnosni graf)
 qqnorm(fh_concat$stdResidualsLinear, xlab="Standardizirani reziduali", ylab="Z-vrijednost", main="Reziduali linearne regresije (normalni vjerojatnosni graf)"); qqline(fh_concat$stdResidualsLinear)
 
-# Checking normality quad residuals (normal prob plot)
+# Provjera normalnosti reziduala kvadratičnog modela (normalni vjerojatnosni graf)
 qqnorm(fh_concat$stdResidualsQuadratic, xlab="Standardizirani reziduali", ylab="Z-vrijednost", main="Reziduali kvadratne regresije (normalni vjerojatnosni graf)"); qqline(fh_concat$stdResidualsQuadratic)
 
-# Checking normality lin residuals (Kolmogorov-Smirnov test)
+# Provjera normalnosti reziduala linearnog modela (Kolmogorov-Smirnovljev test)
 ks.test(fh_concat$stdResidualsLinear, "pnorm", mean=mean(fh_concat$stdResidualsLinear), sd=sd(fh_concat$stdResidualsLinear))
 
-# Checking normality quad residuals (Kolmogorov-Smirnov test)
+# Provjera normalnosti reziduala kvadratičnog modela (Kolmogorov-Smirnovljev test)
 ks.test(fh_concat$stdResidualsQuadratic, "pnorm", mean=mean(fh_concat$stdResidualsQuadratic), sd=sd(fh_concat$stdResidualsQuadratic))
 
-# R^2
+# Gledajući i po normalnom vjerojatnosnom grafu i po Kolmogorov-Smirnovljevom testu, reziduali kvadratičnog modela ipak malo bolje odgovaraju jediničnoj normalnoj distribuciji. Iako, i jedni i drugi reziduali imaju dosta visoku p vrijednost.
+
+# R^2 statisticka
 summary(linear_model)$r.squared
 summary(quadratic_model)$r.squared
+
+# U ovom koraku, zaključili bismo da nema toliko značajne razlike da nadmaši kompleksnost kvadratičnog modela (sudeći po R^2 statistici). Linearni model ipak bi bio pogodniji. Ipak, ne možemo još to sa sigurnošću zaključiti bez dodatnih informacija ANOVA-e.
+
+# Anova test prihvatljivosti modela
+
+anova(linear_model, quadratic_model)
+
+# U ovom koraku, dobivamo više informacija. Uz nivo značajnosti 0.05 i uzimajući u obzir p < 2.2e-16, možemo zaključiti da dobivamo statistički značajan napredak koristeći kvadratični u odnosnu na linearni model.
+
+# 95% interval povjerenja za paramtere kvadratičnog modela:
+
+summary(quadratic_model)
+confint(quadratic_model, 'Tlak', level=0.95)
+confint(quadratic_model, 'Tlak2', level=0.95)
+confint(quadratic_model, '(Intercept)', level=0.95)
+
+confident <- data.frame(Tlak = fh_concat$Tlak, Vreliste = predict(quadratic_model, fh_concat, interval = 'confidence', level = 0.95))
+
+ggplot(fh_concat, aes(x = Tlak, y = Vreliste)) +
+  geom_point() +
+  geom_smooth(data = confident, aes(x = Tlak, y = Vreliste.lwr), color = 'red') + 
+  geom_smooth(data = confident, aes(x = Tlak, y = Vreliste.upr), color = 'blue')
+
+predicted <- data.frame(Tlak = fh_concat$Tlak, Vreliste = predict(quadratic_model, fh_concat, interval = 'prediction', level = 0.95))
+
+ggplot(fh_concat, aes(x = Tlak, y = Vreliste)) +
+  geom_point() +
+  geom_smooth(data = predicted, aes(x = Tlak, y = Vreliste.lwr), color = 'red') + 
+  geom_smooth(data = predicted, aes(x = Tlak, y = Vreliste.upr), color = 'blue')
 
 ```
