@@ -339,7 +339,7 @@ ks.test(fh_concat$stdResidualsQuadratic, "pnorm", mean=mean(fh_concat$stdResidua
 summary(linear_model)$r.squared
 summary(quadratic_model)$r.squared
 
-# U ovom koraku, zaključili bismo da nema toliko značajne razlike da nadmaši kompleksnost kvadratičnog modela (sudeći po R^2 statistici). Linearni model ipak bi bio pogodniji. Ipak, ne možemo još to sa sigurnošću zaključiti bez dodatnih informacija ANOVA-e.
+# U ovom koraku, zaključili bismo da kvadratični model bolje opisuje zadani uzorak. Budući da smo u prošlom koraku vidjeli da su reziduali tog modela bliži jediničnoj normalnoj razdiobi, odabrali bismo upravo kvadratični model. Ipak, pogledat ćemo dodatne informacije koje nam pruža ANOVA.
 
 # Anova test prihvatljivosti modela
 
