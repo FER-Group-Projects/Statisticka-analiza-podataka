@@ -262,6 +262,7 @@ Kod drugog uzorka p-vrijednost testa je približno 0, stoga isto kao i za prvi u
 
 Iste zaključke možemo povući i iz 95% intervala pouzdanosti (prethodna stranica). Vidimo da ni za jedan uzorak $\frac{1}{3}$ ne ulazi u interval. Dakle $\frac{1}{3} \notin [0.3335, 0.3399]$ za prvi uzorak, odnosno $\frac{1}{3} \notin [0.3360, 0.3394]$ za drugi. Na osnovu toga možemo doći do istog zaključka: odbacujemo $H_0$ u korist $H_1$ uz nivo značajnosti 5%.
 
+\clearpage
 # Zadatak B
 
 ```{r, echo = FALSE}
@@ -352,32 +353,36 @@ ggplot(data=fh_concat, mapping=aes(x = x.axis, y = stdResidualsQuadratic)) +
 .
 
 ```{r}
-qqnorm(fh_concat$stdResidualsLinear, xlab="Standardizirani reziduali", ylab="Z-vrijednost", main="Reziduali linearne regresije (normalni vjerojatnosni graf)"); qqline(fh_concat$stdResidualsLinear)
+qqnorm(fh_concat$stdResidualsLinear, xlab="Standardizirani reziduali", ylab="Z-vrijednost",
+       main="Reziduali linearne regresije (normalni vjerojatnosni graf)"); qqline(fh_concat$stdResidualsLinear)
 ```
 
 ## Provjera normalnosti reziduala kvadratičnog modela (normalni vjerojatnosni graf)
 .
 
 ```{r}
-qqnorm(fh_concat$stdResidualsQuadratic, xlab="Standardizirani reziduali", ylab="Z-vrijednost", main="Reziduali kvadratne regresije (normalni vjerojatnosni graf)"); qqline(fh_concat$stdResidualsQuadratic)
+qqnorm(fh_concat$stdResidualsQuadratic, xlab="Standardizirani reziduali", ylab="Z-vrijednost", 
+       main="Reziduali kvadratne regresije (normalni vjerojatnosni graf)"); qqline(fh_concat$stdResidualsQuadratic)
 ```
 
 ## Provjera normalnosti reziduala linearnog modela (Kolmogorov-Smirnovljev test)
 .
 
 ```{r}
-ks.test(fh_concat$stdResidualsLinear, "pnorm", mean=mean(fh_concat$stdResidualsLinear), sd=sd(fh_concat$stdResidualsLinear))
+ks.test(fh_concat$stdResidualsLinear, "pnorm", mean=mean(fh_concat$stdResidualsLinear), 
+        sd=sd(fh_concat$stdResidualsLinear))
 ```
 
 ## Provjera normalnosti reziduala kvadratičnog modela (Kolmogorov-Smirnovljev test)
 .
 
 ```{r}
-ks.test(fh_concat$stdResidualsQuadratic, "pnorm", mean=mean(fh_concat$stdResidualsQuadratic), sd=sd(fh_concat$stdResidualsQuadratic))
+ks.test(fh_concat$stdResidualsQuadratic, "pnorm", mean=mean(fh_concat$stdResidualsQuadratic), 
+        sd=sd(fh_concat$stdResidualsQuadratic))
 ```
 Gledajući i po normalnom vjerojatnosnom grafu i po Kolmogorov-Smirnovljevom testu, reziduali kvadratičnog modela ipak malo bolje odgovaraju jediničnoj normalnoj distribuciji. Iako, i jedni i drugi reziduali imaju dosta visoku p vrijednost.
 
-## R^2 statisticka
+## R^2 statistika
 ```{r}
 summary(linear_model)$r.squared
 summary(quadratic_model)$r.squared
@@ -395,7 +400,7 @@ anova(linear_model, quadratic_model)
 ```
 U ovom koraku, dobivamo više informacija. Uz nivo značajnosti 0.05 i uzimajući u obzir p < 2.2e-16, možemo zaključiti da dobivamo statistički značajan napredak koristeći kvadratični u odnosnu na linearni model.
 
-## 95% interval povjerenja za paramtere kvadratičnog modela:
+## 95% interval povjerenja za parametre kvadratičnog modela:
 .
 
 ```{r}
@@ -409,7 +414,9 @@ confint(quadratic_model, '(Intercept)', level=0.95)
 .
 
 ```{r}
-confident <- data.frame(Tlak = fh_concat$Tlak, Vreliste = predict(quadratic_model, fh_concat, interval = 'confidence', level = 0.95))
+confident <- data.frame(Tlak = fh_concat$Tlak, Vreliste = 
+                          predict(quadratic_model, fh_concat, interval = 'confidence', 
+                                  level = 0.95))
 
 ggplot(fh_concat, aes(x = Tlak, y = Vreliste)) +
   geom_point() +
@@ -421,7 +428,9 @@ ggplot(fh_concat, aes(x = Tlak, y = Vreliste)) +
 .
 
 ```{r}
-predicted <- data.frame(Tlak = fh_concat$Tlak, Vreliste = predict(quadratic_model, fh_concat, interval = 'prediction', level = 0.95))
+predicted <- data.frame(Tlak = fh_concat$Tlak, Vreliste = 
+                          predict(quadratic_model, fh_concat, interval = 'prediction', 
+                                  level = 0.95))
 
 ggplot(fh_concat, aes(x = Tlak, y = Vreliste)) +
   geom_point() +
