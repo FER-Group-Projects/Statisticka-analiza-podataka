@@ -261,4 +261,13 @@ ks.test(fh_concat$stdResidualsQuadratic, "pnorm", mean=mean(fh_concat$stdResidua
 summary(linear_model)$r.squared
 summary(quadratic_model)$r.squared
 
+# anova test of model fitting and complexity
+
+anova(linear_model, quadratic_model)
+# using level of significance p = 0.05 and given p < 2.2e-16, we conclude that significant gain is achieved using quadratic model in lieu of linear model
+
+# 95% confidence interval for parameters of quadratic model
+summary(quadratic_model)
+confint(quadratic_model, 'Tlak', level=0.95)
+
 ```
