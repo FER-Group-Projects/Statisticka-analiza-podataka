@@ -1,12 +1,12 @@
 ---
-title: "Izvješće"
-subtitle: "Prilagodba modela podatcima i linearna regresija"
+title: "Prilagodba modela podatcima i linearna regresija"
+subtitle: "Izvješće"
 author: "Matija Bačić, Marko Lazarić, Roman Yatsukha"
-date: "12.05.2019."
+date: "29.05.2019."
 output: 
   pdf_document:
     includes:
-      in_header: header.tex
+      in_header: header.tex 
 ---
   
 ```{r, echo = FALSE}
@@ -14,6 +14,12 @@ library(knitr)
 library(pander)
 opts_chunk$set(tidy.opts=list(width.cutoff=60),tidy=TRUE)
 ```
+
+\thispagestyle{empty}
+\clearpage
+\tableofcontents
+\thispagestyle{empty}
+\clearpage
 
 # Zadatak A
 
@@ -60,8 +66,6 @@ p.1 = unname(binom.test(x = desirable.outcomes(dice$V3, dice$V1),
 Procjena parametra p za prvi uzorak jest `r sprintf('%.4f', p.0)`, dok je za drugi uzorak `r sprintf('%.4f', p.1)`.
 \pagebreak
 
-### Testiranje prvog uzorka s distribucijom $B(12, 1/3)$
-
 ```{r results='asis'}
 goodness_of_fit_binomial_test <- function(frequencies, n, p, p.estimated = FALSE) {
   print_table <- function(observed, expected, caption = 'TODO fix') {
@@ -69,11 +73,11 @@ goodness_of_fit_binomial_test <- function(frequencies, n, p, p.estimated = FALSE
     
     table.frame = data.frame(t(cbind(observed, expected)), row.names = c('$o_i$', '$e_i$'))
     colnames(table.frame) <- c(as.character(0:(length(observed) - 1)))
-    pandoc.table(table.frame, style = 'rmarkdown')
+    pandoc.table(table.frame, style = 'rmarkdown', caption = caption)
   }
   
   observed = frequencies
-  expected = sum(observed) * dbinom(0:n, n, p)
+  expected = round(sum(observed) * dbinom(0:n, n, p))
   
   pruned.observed = c()
   pruned.expected = c()
@@ -81,10 +85,10 @@ goodness_of_fit_binomial_test <- function(frequencies, n, p, p.estimated = FALSE
   current.sum.expected = 0
   current.index = 1
   
-  print_table(observed, expected)
+  print_table(observed, expected, 'Opažene i očekivane frekvencije.')
       
   for (i in 1:length(observed)) { 
-    if (current.sum.expected + expected[i] > 5) {
+    if (current.sum.expected + expected[i] >= 5) {
       pruned.expected[current.index] <- current.sum.expected + expected[i]
       pruned.observed[current.index] <- current.sum.observed + observed[i]
       
@@ -106,40 +110,59 @@ goodness_of_fit_binomial_test <- function(frequencies, n, p, p.estimated = FALSE
       pruned.observed[current.index - 1] + current.sum.observed
   }
   
-  print_table(pruned.observed, pruned.expected)
+  print_table(pruned.observed, pruned.expected, 
+              caption = 'Opažene i očekivane frekvencije nakon što su razredi s manje od 5 opažanja spojeni.')
   
   X2 = sum((pruned.observed - pruned.expected)^2 / pruned.expected)
-  p = pchisq(X2, df = length(pruned.observed) - (if (p.estimated) 2 else 1), 
-             lower.tail = FALSE)
+  #p = pchisq(X2, df = length(pruned.observed) - (if (p.estimated) 2 else 1), 
+  #           lower.tail = FALSE)
+  p = chisq.test(x = pruned.observed, p = pruned.expected / sum(pruned.expected))$p.value
   
   pandoc.p(sprintf(
     fmt = "$$ x = \\sum\\limits^k_{i=0} \\frac{(o_i - e_i)^2}{e_i} = %.4f $$", X2))
   pandoc.p(sprintf(fmt = "$$ p = P(X \\ge x) = %.4f $$", p))
 }
+```
+\clearpage
 
+### Testiranje prvog uzorka s distribucijom $B(12, 1/3)$
+$$H_0: o_i = e_i,\ \ i = \{1, ..., k\}$$
+$$H_1: o_i \ne e_i,\text{ za neki } i$$
+```{r results='asis'}
 goodness_of_fit_binomial_test(dice$V2, 12, 1/3)
 ```
+
+Uz nivo značajnosti 5%, ne možemo odbaciti $H_0$ jer je $p > 0.05$.
 \pagebreak
 
 ### Testiranje prvog uzorka s distribucijom $B(12, `r sprintf('%.4f', p.0)`)$
-
+$$H_0: o_i = e_i,\ \ i = \{1, ..., k\}$$
+$$H_1: o_i \ne e_i,\text{ za neki } i$$
 ```{r results='asis'}
 goodness_of_fit_binomial_test(dice$V2, 12, p.0, p.estimated = TRUE)
 ```
+
+Uz nivo značajnosti 5%, ne možemo odbaciti $H_0$ jer je $p > 0.05$.
 \pagebreak
 
 ### Testiranje drugog uzorka s distribucijom $B(12, 1/3)$
-
+$$H_0: o_i = e_i,\ \ i = \{1, ..., k\}$$
+$$H_1: o_i \ne e_i,\text{ za neki } i$$
 ```{r results='asis'}
 goodness_of_fit_binomial_test(dice$V3, 12, 1/3)
 ```
+
+Uz nivo značajnosti 5%, odbacujemo $H_0$ u korist $H_1$ jer je $p \leq 0.05$.
 \pagebreak
 
 ### Testiranje drugog uzorka s distribucijom $B(12, `r sprintf('%.4f', p.1)`)$
-
+$$H_0: o_i = e_i,\ \ i = \{1, ..., k\}$$
+$$H_1: o_i \ne e_i,\text{ za neki } i$$
 ```{r results='asis'}
 goodness_of_fit_binomial_test(dice$V3, 12, p.1, p.estimated = TRUE)
 ```
+
+Uz nivo značajnosti 5%, ne možemo odbaciti $H_0$ jer je $p > 0.05$.
 \pagebreak
 
 ## Usporedba histograma podataka s binomnim razdiobama
