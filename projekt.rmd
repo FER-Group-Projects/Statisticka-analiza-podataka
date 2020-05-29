@@ -22,14 +22,19 @@ opts_chunk$set(tidy.opts=list(width.cutoff=60),tidy=TRUE)
 ```{r}
 dice <- read.delim("dice.dat", header=FALSE)
       
-barplot(dice$V2, names.arg = dice$V1)
-barplot(dice$V3, names.arg = dice$V1)
+barplot(dice$V2 / sum(dice$V2),
+        main = 'Frekvencije kategorija, I. uzorak',
+        names.arg = dice$V1)
+
+barplot(dice$V3 / sum(dice$V3),
+        main = 'Frekvencije kategorija, II. uzorak',
+        names.arg = dice$V1)
 
 ```
 
 ## Testiranje distribucije podataka, procjena parametra p
 
-Parametar p binomne razdiobe možemo procjeniti koristeći procjenu najveće izglednosti. Kod binomne distribucije parametar p možemo procjeniti kao omjer povoljnih ishoda i svih ishoda.
+Parametar p binomne razdiobe možemo procjeniti koristeći procjenu najveće izglednosti. Kod binomne distribucije parametar p možemo procjeniti kao omjer povoljnih ishoda i svih ishoda. `binom.test` također nudi procjenu parametra p binomne razdiobe.
 
 ```{r}
 
@@ -42,10 +47,23 @@ all.outcomes <- function(values, categories)
 estimate.p <- function(values, categories)
   desirable.outcomes(values, categories) / all.outcomes(values, categories)
 
-p.0 = estimate.p(dice$V2, dice$V1)
-p.1 = estimate.p(dice$V3, dice$V1)
+# p.0 = estimate.p(dice$V2, dice$V1)
+# p.1 = estimate.p(dice$V3, dice$V1)
 
-goodness_of_fit_binomial_test <- function(frequencies, n, p) {
+p.0 = unname(binom.test(x = desirable.outcomes(dice$V2, dice$V1),
+                        n = all.outcomes(dice$V2, dice$V1))$estimate)
+
+p.1 = unname(binom.test(x = desirable.outcomes(dice$V3, dice$V1),
+                        n = all.outcomes(dice$V3, dice$V1))$estimate)
+```
+
+Procjena parametra p za prvi uzorak jest `r sprintf('%.4f', p.0)`, dok je za drugi uzorak `r sprintf('%.4f', p.1)`.
+\pagebreak
+
+### Testiranje prvog uzorka s distribucijom $B(12, 1/3)$
+
+```{r results='asis'}
+goodness_of_fit_binomial_test <- function(frequencies, n, p, p.estimated = FALSE) {
   print_table <- function(observed, expected, caption = 'TODO fix') {
     panderOptions('table.split.table', Inf)
     
@@ -82,26 +100,23 @@ goodness_of_fit_binomial_test <- function(frequencies, n, p) {
   }
   
   if (current.sum.expected > 0 || current.sum.observed > 0) {
-    pruned.expected[current.index - 1] <- pruned.expected[current.index - 1] + current.sum.expected
-    pruned.observed[current.index - 1] <- pruned.observed[current.index - 1] + current.sum.observed
+    pruned.expected[current.index - 1] <- 
+      pruned.expected[current.index - 1] + current.sum.expected
+    pruned.observed[current.index - 1] <- 
+      pruned.observed[current.index - 1] + current.sum.observed
   }
   
   print_table(pruned.observed, pruned.expected)
   
   X2 = sum((pruned.observed - pruned.expected)^2 / pruned.expected)
-  p = pchisq(X2, df=length(pruned.observed) - 1, lower.tail = FALSE)
+  p = pchisq(X2, df = length(pruned.observed) - (if (p.estimated) 2 else 1), 
+             lower.tail = FALSE)
   
-  pandoc.p(sprintf(fmt = "$$ x = \\sum\\limits^k_{i=0} \\frac{(o_i - e_i)^2}{e_i} = %.4f $$", X2))
+  pandoc.p(sprintf(
+    fmt = "$$ x = \\sum\\limits^k_{i=0} \\frac{(o_i - e_i)^2}{e_i} = %.4f $$", X2))
   pandoc.p(sprintf(fmt = "$$ p = P(X \\ge x) = %.4f $$", p))
 }
-```
 
-Procjena parametra p za prvi uzorak jest `r sprintf('%.4f', p.0)`, dok je za drugi uzorak `r sprintf('%.4f', p.1)`.
-\pagebreak
-
-### Testiranje prvog uzorka s distribucijom $B(12, 1/3)$
-
-```{r results='asis'}
 goodness_of_fit_binomial_test(dice$V2, 12, 1/3)
 ```
 \pagebreak
@@ -109,7 +124,7 @@ goodness_of_fit_binomial_test(dice$V2, 12, 1/3)
 ### Testiranje prvog uzorka s distribucijom $B(12, `r sprintf('%.4f', p.0)`)$
 
 ```{r results='asis'}
-goodness_of_fit_binomial_test(dice$V2, 12, p.0)
+goodness_of_fit_binomial_test(dice$V2, 12, p.0, p.estimated = TRUE)
 ```
 \pagebreak
 
@@ -123,40 +138,56 @@ goodness_of_fit_binomial_test(dice$V3, 12, 1/3)
 ### Testiranje drugog uzorka s distribucijom $B(12, `r sprintf('%.4f', p.1)`)$
 
 ```{r results='asis'}
-goodness_of_fit_binomial_test(dice$V3, 12, p.1)
+goodness_of_fit_binomial_test(dice$V3, 12, p.1, p.estimated = TRUE)
 ```
 \pagebreak
 
 ## Usporedba histograma podataka s binomnim razdiobama
 
 ```{r}
-barplot(dbinom(0:12, 12, 1 / 3), names.arg = 0:12, 
-        main = "Binomna razdioba - B(12, 1 / 3)")
-barplot(dbinom(0:12, 12, p.0), names.arg = 0:12, 
-        main = sprintf(fmt = 'Binomna razdioba - B(12, %.4f)', p.0))
-barplot(dbinom(0:12, 12, p.1), names.arg = 0:12, 
-        main = sprintf(fmt = 'Binomna razdioba - B(12, %.4f)', p.1))
+
+legend.scale = 0.7
+
+barplot(rbind(dice$V2 / sum(dice$V2), dbinom(0:12, 12, 1 / 3), dbinom(0:12, 12, p.0)),
+        legend.text = c('Frekvencije pojavljivanja kategorija I. uzorka', 
+                        'Distribucija B(12, 1 / 3)',
+                        sprintf('Distribucija B(12, %.4f)', p.0)),
+        args.legend = list('cex' = legend.scale),
+        beside = TRUE,
+        names.arg = dice$V1)
+
+barplot(rbind(dice$V3 / sum(dice$V3), dbinom(0:12, 12, 1 / 3), dbinom(0:12, 12, p.1)),
+        legend.text = c('Frekvencije pojavljivanja kategorija II. uzorka', 
+                        'Distribucija B(12, 1 / 3)',
+                        sprintf('Distribucija B(12, %.4f)', p.1)),
+        args.legend = list('cex' = legend.scale),
+        beside = TRUE,
+        names.arg = dice$V1)
 ```
 
 ### Razlike
 
-Binomne vjerojatnosti su pomnožene s ukupnim brojem ishoda te su od toga oduzete vrijednosti uzorka.
+Binomne vjerojatnosti su pomnožene s ukupnim brojem ishoda te su od toga oduzete vrijednosti uzorka. Nakon toga su razlike skalirane što daje relativnu frekvenciju.
 
 ```{r}
-barplot(sum(dice$V2) * dbinom(0:12, 12, 1 / 3) - dice$V2, names.arg = 0:12, 
-        main = 'Razlika drugog uzorka i B(12, 1 / 3)')
-barplot(sum(dice$V2) * dbinom(0:12, 12, p.0) - dice$V2, names.arg = 0:12, 
-        main = sprintf(fmt = 'Razlika prvog uzorka i B(12, %.4f)', p.0))
+barplot(rbind(dbinom(0:12, 12, 1 / 3) - dice$V2 / sum(dice$V2), 
+              dbinom(0:12, 12, p.0) - dice$V2 / sum(dice$V2)), 
+        names.arg = dice$V1, 
+        beside = TRUE,
+        legend = c('Razlika I. uzorka i B(12, 1 / 3)', 
+                   sprintf('Razlika I. uzorka i B(12, %.4f)', p.0)))
 
-barplot(sum(dice$V3) * dbinom(0:12, 12, 1 / 3) - dice$V3, names.arg = 0:12, 
-        main = 'Razlika drugog uzorka i B(12, 1 / 3)')
-barplot(sum(dice$V3) * dbinom(0:12, 12, p.1) - dice$V3, names.arg = 0:12, 
-        main = sprintf(fmt = 'Razlika drugog uzorka i B(12, %.4f)', p.1))
+barplot(rbind(dbinom(0:12, 12, 1 / 3) - dice$V3 / sum(dice$V3), 
+              dbinom(0:12, 12, p.1) - dice$V3 / sum(dice$V3)), 
+        names.arg = dice$V1, 
+        beside = TRUE,
+        legend = c('Razlika II. uzorka i B(12, 1 / 3)', 
+                   sprintf('Razlika II. uzorka i B(12, %.4f)', p.1)))
 ```
 
 ## Određivanje intervala pouzdanosti za parametar p
 
-Koristeći Clopper-Pearson intervalnu procjenu možemo procjeniti interval pouzdanosti parametra p. 
+Koristeći Clopper-Pearson intervalnu procjenu možemo procjeniti interval pouzdanosti parametra p. `binom.test` služi kao provjera intervala pouzdanosti jer koristi istu egzaktnu metodu.
 
 ```{r}
 
@@ -171,12 +202,42 @@ confidence.interval <- function(values, categories, interval) {
 
 interval = 0.95
 
-cp.0 = confidence.interval(dice$V2, dice$V1, interval)
-cp.1 = confidence.interval(dice$V3, dice$V1, interval)
+# cp.0 = confidence.interval(dice$V2, dice$V1, interval)
+# cp.1 = confidence.interval(dice$V3, dice$V1, interval)
+
+cp.0 = binom.test(x = desirable.outcomes(dice$V2, dice$V1),
+                  n = all.outcomes(dice$V2, dice$V1),
+                  conf.level = interval)$conf.int
+
+cp.1 = binom.test(x = desirable.outcomes(dice$V3, dice$V1),
+                  n = all.outcomes(dice$V3, dice$V1),
+                  conf.level =  interval)$conf.int
 
 ```
 
 `r interval * 100`% interval pouzdanosti za prvi uzorak jest: [`r sprintf('%.4f, %.4f', cp.0[1], cp.0[2])`], dok je za drugi uzorak: [`r sprintf('%.4f, %.4f', cp.1[1], cp.1[2])`].
+
+```{r}
+htest.p.0 = binom.test(x = desirable.outcomes(dice$V2, dice$V1), 
+                       n = all.outcomes(dice$V2, dice$V1), 
+                       p = 1 / 3, alternative = 'two.sided')$p.value
+
+htest.p.1 = binom.test(x = desirable.outcomes(dice$V3, dice$V1), 
+                       n = all.outcomes(dice$V3, dice$V1), 
+                       p = 1 / 3, alternative = 'two.sided')$p.value
+
+```
+
+## Testiranje hipoteze
+
+$$H_0: p = \frac{1}{3}$$
+$$H_1: p \ne \frac{1}{3}$$
+
+Koristeći ugrađenu `binom.test` funkciju možemo provesti test osnovne hipoteze $H_0$ u odnosu na alternativu $H_1$.
+Za prvi uzorak p-vrijednost testa jest `r sprintf("%.4f", htest.p.0)` što je ispod nivoa značajnosti. Dakle odbacujemo $H_0$ u korist $H_1$ uz nivo značajnosti 5%.
+Kod drugog uzorka p-vrijednost testa je približno 0, stoga isto kao i za prvi uzorak odbacujemo $H_0$ uz nivo značajnosti 5%.
+
+Iste zaključke možemo povući i iz 95% intervala pouzdanosti (prethodna stranica). Vidimo da ni za jedan uzorak $\frac{1}{3}$ ne ulazi u interval. Dakle $\frac{1}{3} \notin [0.3335, 0.3399]$ za prvi uzorak, odnosno $\frac{1}{3} \notin [0.3360, 0.3394]$ za drugi. Na osnovu toga možemo doći do istog zaključka: odbacujemo $H_0$ u korist $H_1$ uz nivo značajnosti 5%.
 
 # Zadatak B
 
